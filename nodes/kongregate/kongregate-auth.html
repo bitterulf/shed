@@ -1,0 +1,33 @@
+<script type="text/javascript">
+    RED.nodes.registerType('kongregate-auth',{
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value:""}
+        },
+        inputs:1,
+        outputs:2,
+        icon: "file.png",
+        label: function() {
+            return this.name||"kongregate-auth";
+        },
+        credentials: {
+             "api-key": {type:"password"}
+         }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="kongregate-auth">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+     <div class="form-row">
+         <label for="node-input-api-key"><i class="icon-tag"></i> API Key</label>
+         <input type="password" id="node-input-api-key">
+     </div>
+</script>
+
+<script type="text/x-red" data-help-name="kongregate-auth">
+    <p>A simple node that converts the message payloads into all lower-case characters</p>
+</script>

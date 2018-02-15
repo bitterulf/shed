@@ -1,0 +1,8 @@
+{
+    "name" : "kongregate",
+    "node-red" : {
+        "nodes": {
+            "kongregate-auth": "kongregate-auth.js"
+        }
+    }
+}
