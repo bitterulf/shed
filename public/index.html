@@ -1,14 +1,23 @@
-<body>
-    <script src="//unpkg.com/mithril/mithril.js"></script>
-    <script src="highland.min.js"></script>
 
+<html>
+    <head>
+        <title>solo</title>
+        <script src="//unpkg.com/mithril/mithril.js"></script>
+        <script src="highland.min.js"></script>
+        <script src="https://aframe.io/releases/0.7.0/aframe.min.js"></script>
+    </head>
+<body>
+    <a-scene embedded id='scene'>
+      <a-box class="countBox" position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9"></a-box>
+      <a-sky color="#ECECEC"></a-sky>
+    </a-scene>
+    <div id='root' style='position: absolute; top: 0;'></div>
     <script>
         var _ = highland;
 
         var Hello = {
             view: function(vnode) {
-                console.log('MY STATE', vnode.attrs.state);
-                return m("main", [
+                return m("div", { style: ''}, [
                     m("h1", {class: "title"}, "My first app"),
                     m("button", {
                         onclick: function() {
@@ -21,7 +30,7 @@
                         }
                     }, '-'),
                     m("span", vnode.attrs.name + ' (' + vnode.attrs.state.counter + ')')
-                ])
+                ]);
             }
         };
 
@@ -40,6 +49,21 @@
                         return count - 1;
                     }
                     return count
+                }),
+                _.doto(function(count) {
+                    var sceneEl = document.getElementById('scene');
+                    sceneEl.querySelectorAll('.countBox').forEach(function(element) {
+                        element.parentNode.removeChild(element);
+                    });
+
+                    for (var i = 0; i < count; i++) {
+                        var el = document.createElement('a-box');
+                        el.setAttribute('class', 'countBox');
+                        el.setAttribute('position', i+' 0 0');
+                        el.setAttribute('rotation', '0 0 0');
+                        el.setAttribute('color', '#4CC3D9');
+                        sceneEl.appendChild(el);
+                    }
                 }),
                 _.map(function(count) {
                     if (count > 0) {
@@ -84,12 +108,13 @@
 
         var App = {
             view: function() {
-                return m("main", [
+                return m("div", [
                     m(HelloContainer, {name: 'nice'})
                 ])
             }
         };
 
-        m.mount(document.body, App);
+        m.mount(document.getElementById('root'), App);
     </script>
 </body>
+</html>
