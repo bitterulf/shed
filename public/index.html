@@ -1,0 +1,95 @@
+<body>
+    <script src="//unpkg.com/mithril/mithril.js"></script>
+    <script src="highland.min.js"></script>
+
+    <script>
+        var _ = highland;
+
+        var Hello = {
+            view: function(vnode) {
+                console.log('MY STATE', vnode.attrs.state);
+                return m("main", [
+                    m("h1", {class: "title"}, "My first app"),
+                    m("button", {
+                        onclick: function() {
+                            vnode.attrs.pushFact({type: 'RAISE_COUNTER'});
+                        }
+                    }, '+'),
+                    m("button", {
+                        onclick: function() {
+                            vnode.attrs.pushFact({type: 'LOWER_COUNTER'});
+                        }
+                    }, '-'),
+                    m("span", vnode.attrs.name + ' (' + vnode.attrs.state.counter + ')')
+                ])
+            }
+        };
+
+        var facts = [];
+        var state = {};
+
+        var pipelines = {};
+
+        pipelines.counter = function() {
+            return _.pipeline(
+                _.reduce(0, function(count, entry) {
+                    if (entry.type && entry.type === 'RAISE_COUNTER') {
+                        return count + 1;
+                    }
+                    else if (entry.type && entry.type === 'LOWER_COUNTER') {
+                        return count - 1;
+                    }
+                    return count
+                }),
+                _.map(function(count) {
+                    if (count > 0) {
+                        return '+' + count;
+                    }
+
+                    return count + '';
+                })
+            )
+        };
+
+        var recalculateState = function() {
+            Object.keys(pipelines).forEach(function(pipelineKey) {
+                _(facts)
+                    .pipe(pipelines[pipelineKey]())
+                    .pull(function (err, result) {
+                        state[pipelineKey] = result;
+                    });
+            });
+        }
+
+        recalculateState();
+
+        var Connect = function(component) {
+
+            return {
+                view: function(vnode) {
+                    var attrs = object2 = Object.assign({}, vnode.attrs);
+                    attrs.pushFact = function(fact) {
+                        facts.push(JSON.parse(JSON.stringify(fact)));
+                        recalculateState();
+                    };
+
+                    attrs.state = state;
+
+                    return m(component, attrs, vnode.children);
+                }
+            };
+        };
+
+        var HelloContainer = Connect(Hello);
+
+        var App = {
+            view: function() {
+                return m("main", [
+                    m(HelloContainer, {name: 'nice'})
+                ])
+            }
+        };
+
+        m.mount(document.body, App);
+    </script>
+</body>
