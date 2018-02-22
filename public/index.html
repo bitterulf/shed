@@ -7,10 +7,11 @@
         <script src="https://aframe.io/releases/0.7.0/aframe.min.js"></script>
     </head>
 <body>
-    <a-scene embedded id='scene'>
-      <a-box class="countBox" position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9"></a-box>
-      <a-sky color="#ECECEC"></a-sky>
-    </a-scene>
+    <div style='display: none;'>
+        <a-scene embedded id='scene'>
+          <a-sky color="#ECECEC"></a-sky>
+        </a-scene>
+    </div>
     <div id='root' style='position: absolute; top: 0;'></div>
     <script>
         var _ = highland;
@@ -34,6 +35,82 @@
             }
         };
 
+        var Grid = {
+            cell: function(vnode, y, x) {
+                var colors = {
+                    farm: '#80ff80',
+                    factory: '#808080'
+                }
+
+                var blockStyle = '';
+
+                vnode.attrs.state.buildings.forEach(function(building) {
+                    if (building.x == x && building.y == y) {
+                        blockStyle = 'background-color: ' + (colors[building.building] || '#ff00ff') + ';';
+                    }
+                });
+
+                return m('td', {
+                }, m('div', {
+                    style: 'cursor: pointer; border: 1px solid black; height: 64px; width: 64px; display: inline-block; text-align: center;' + blockStyle,
+                    onclick: function() {
+                        vnode.attrs.pushFact({type: 'CELL_CLICKED', x: x, y: y});
+                    }
+                }, x + '_' + y));
+            },
+            row: function(vnode, y) {
+                var cells = [];
+
+                for (var w = 0; w < vnode.attrs.width; w++) {
+                    cells.push(vnode.tag.cell(vnode, y, w));
+                }
+
+                return m('tr', { style: ''}, cells);
+            },
+            table: function(vnode) {
+                var rows = [];
+
+                for (var h = 0; h < vnode.attrs.height; h++) {
+                    rows.push(vnode.tag.row(vnode, h));
+                }
+
+                return m('table', { style: ''}, rows);
+            },
+            view: function(vnode) {
+
+                return m('div', { style: ''}, [
+                    vnode.tag.table(vnode)
+                ]);
+            }
+        };
+
+        var ConstructionMenu = {
+            view: function(vnode) {
+                var buildOptions = vnode.attrs.state.buildOptions;
+
+                if (buildOptions.empty) {
+                    return m("div", '');
+                }
+                else if (buildOptions.building) {
+                    return m("div", buildOptions.building.building);
+                }
+
+                return m("div", { style: ''}, [
+                    m("h1", {class: "title"}, "Construction Menu"),
+                    m("button", {
+                        onclick: function() {
+                            vnode.attrs.pushFact({type: 'BUILDING_CREATED', x: buildOptions.x, y: buildOptions.y, building: 'factory'});
+                        }
+                    }, 'factory'),
+                    m("button", {
+                        onclick: function() {
+                            vnode.attrs.pushFact({type: 'BUILDING_CREATED', x: buildOptions.x, y: buildOptions.y, building: 'farm'});
+                        }
+                    }, 'farm')
+                ]);
+            }
+        };
+
         var facts = [];
         var state = {};
 
@@ -52,9 +129,11 @@
                 }),
                 _.doto(function(count) {
                     var sceneEl = document.getElementById('scene');
-                    sceneEl.querySelectorAll('.countBox').forEach(function(element) {
-                        element.parentNode.removeChild(element);
-                    });
+                    var existingBoxes = sceneEl.querySelectorAll('.countBox');
+
+                    for (var e = 0; e < existingBoxes.length; e++) {
+                        existingBoxes[e].parentNode.removeChild(existingBoxes[e]);
+                    }
 
                     for (var i = 0; i < count; i++) {
                         var el = document.createElement('a-box');
@@ -75,11 +154,88 @@
             )
         };
 
+        pipelines.buildings = function() {
+            var colors = {
+                farm: '#80ff80',
+                factory: '#808080'
+            }
+
+            return _.pipeline(
+                _.reduce([], function(buildings, entry) {
+
+                    if (entry.type && entry.type === 'BUILDING_CREATED') {
+                        buildings.push({x: entry.x, y: entry.y, building: entry.building});
+                    }
+
+                    return buildings;
+                }),
+                _.doto(function(buildings) {
+                    var sceneEl = document.getElementById('scene');
+                    var existingBuildings = sceneEl.querySelectorAll('.building');
+
+                    for (var b = 0; b < existingBuildings.length; b++) {
+                        existingBuildings[b].parentNode.removeChild(existingBuildings[b]);
+                    }
+
+                    for (var b = 0; b < buildings.length; b++) {
+                        var building = buildings[b];
+                        var el = document.createElement('a-box');
+                        el.setAttribute('class', 'building');
+                        el.setAttribute('position', building.x+' 0 '+building.y);
+                        el.setAttribute('rotation', '0 0 0');
+                        el.setAttribute('color', colors[building.building] || '#ff00ff');
+                        sceneEl.appendChild(el);
+                    }
+
+                    return;
+                })
+            )
+        };
+
+        pipelines.buildOptions = function() {
+            return _.pipeline(
+                _.reduce({buildings: []}, function(result, entry) {
+
+                    if (entry.type && entry.type === 'CELL_CLICKED') {
+                        result.selectedPosition = {x: entry.x, y: entry.y};
+                    }
+                    else if (entry.type && entry.type === 'BUILDING_CREATED') {
+                        result.buildings.push({x: entry.x, y: entry.y, building: entry.building});
+                    }
+
+                    return result;
+                }),
+                _.map(function(result) {
+                    var selection = {
+
+                    };
+
+                    if (!result.selectedPosition) {
+                        selection.empty = true;
+                        return selection;
+                    }
+
+                    selection.x = result.selectedPosition.x;
+                    selection.y = result.selectedPosition.y;
+                    result.buildings.forEach(function(building) {
+                        if (building.x == selection.x && building.y == selection.y) {
+                            selection.building = building;
+                        }
+                    });
+
+                    return selection;
+                })
+            )
+        };
+
         var recalculateState = function() {
             Object.keys(pipelines).forEach(function(pipelineKey) {
                 _(facts)
                     .pipe(pipelines[pipelineKey]())
                     .pull(function (err, result) {
+                        if (err) {
+                            console.log(err);
+                        }
                         state[pipelineKey] = result;
                     });
             });
@@ -105,11 +261,15 @@
         };
 
         var HelloContainer = Connect(Hello);
+        var GridContainer = Connect(Grid);
+        var ConstructionMenuContainer = Connect(ConstructionMenu);
 
         var App = {
             view: function() {
                 return m("div", [
-                    m(HelloContainer, {name: 'nice'})
+                    m(ConstructionMenuContainer, {}),
+                    m(HelloContainer, {name: 'nice'}),
+                    m(GridContainer, {width: 4, height: 3})
                 ])
             }
         };
