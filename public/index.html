@@ -7,7 +7,7 @@
         <script src="https://aframe.io/releases/0.7.0/aframe.min.js"></script>
     </head>
 <body>
-    <div style='display: none;'>
+    <div style=''>
         <a-scene embedded id='scene'>
           <a-sky color="#ECECEC"></a-sky>
         </a-scene>
@@ -116,6 +116,38 @@
 
         var pipelines = {};
 
+        function removeImpossibleBuildingsPipeline () {
+            return _.pipeline(
+                _.reduce({ entries: [] }, function(cache, entry) {
+                    cache.entries.push(entry);
+
+                    return cache;
+                }),
+                _.map(function(cache) {
+                    var validEntries = [];
+                    var blockedPositions = {};
+
+                    cache.entries.forEach(function(entry) {
+                        if (entry.type && entry.type === 'BUILDING_CREATED') {
+                            if (!blockedPositions[entry.x + '_' + entry.y ]) {
+                                blockedPositions[entry.x + '_' + entry.y ] = true;
+                                validEntries.push(entry);
+                            }
+                            else {
+                                console.log('collision!', entry);
+                            }
+                        }
+                        else {
+                            validEntries.push(entry);
+                        }
+                    });
+
+                    return cache.entries;
+                }),
+                _.flatten()
+            );
+        }
+
         pipelines.counter = function() {
             return _.pipeline(
                 _.reduce(0, function(count, entry) {
@@ -161,6 +193,7 @@
             }
 
             return _.pipeline(
+                removeImpossibleBuildingsPipeline(),
                 _.reduce([], function(buildings, entry) {
 
                     if (entry.type && entry.type === 'BUILDING_CREATED') {
@@ -194,6 +227,7 @@
 
         pipelines.buildOptions = function() {
             return _.pipeline(
+                removeImpossibleBuildingsPipeline(),
                 _.reduce({buildings: []}, function(result, entry) {
 
                     if (entry.type && entry.type === 'CELL_CLICKED') {
