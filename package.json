@@ -16,8 +16,10 @@
     "cheerio": "^1.0.0-rc.2",
     "graphql": "^0.13.1",
     "hapi": "^16.6.0",
+    "highland": "^2.11.1",
     "lodash": "^4.17.5",
     "nedb": "^1.8.0",
+    "random-seed": "^0.3.0",
     "unirest": "^0.5.1"
   },
   "main": "index.js",
