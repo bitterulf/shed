@@ -6,10 +6,10 @@ const Hapi = require('hapi');
 const unirest = require('unirest');
 const shortid = require('shortid').generate;
 const test = require('./test.js');
+const factStream = require('./streams/factStream.js');
+const intentStream = require('./streams/intentStream.js');
 
 const sessionStore = require('./store/session');
-
-console.log(sessionStore);
 
 const server = new Hapi.Server({
     connections: {
@@ -28,7 +28,6 @@ server.connection({
 const primus = new Primus(server.listener, {/* options */});
 
 const credentials = {};
-const sessions = {};
 
 const users = {};
 
@@ -43,25 +42,17 @@ primus.authorize(function (req, done) {
 
 });
 
-const streams = {};
-
-streams.factStream = _()
-    .each(function(fact) {
-        primus.forEach(function (spark, id, connections) {
-            if (spark.username) {
-                spark.write({ type: 'fact', payload: fact });
-            }
-        });
+const moddedFactStream = factStream(function(fact) {
+    primus.forEach(function (spark, id, connections) {
+        if (spark.username) {
+            spark.write({ type: 'fact', payload: fact });
+        }
     });
-streams.factStream.resume();
+});
 
-streams.intentStream = _()
-    .each(function(intent) {
-        console.log('got intend', intent);
-        streams.factStream.write(intent);
-    });
-
-streams.intentStream.resume();
+const moddedIntentStream = intentStream(function(intent) {
+    moddedFactStream.write(intent);
+});
 
 primus.on('connection', function (spark) {
     sessionStore.findOne({ token: spark.query.token }, function(err, doc) {
@@ -76,7 +67,7 @@ primus.on('connection', function (spark) {
             }
 
             spark.on('data', function(message) {
-                streams.intentStream.write(spark.username + ': ' + message);
+                moddedIntentStream.write(spark.username + ': ' + message);
             });
 
             spark.write({type: 'authorized'});
@@ -131,7 +122,6 @@ server.register(
             path: '/login',
             handler: function (request, reply) {
                 const payload = request.payload;
-                console.log('UNK', request.payload);
                 if (credentials[payload.username] && credentials[payload.username] == payload.password) {
 
                     sessionStore.remove({ username: payload.username }, { multi: true }, function (err, numRemoved) {
