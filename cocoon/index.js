@@ -4,7 +4,6 @@ const _ = require('highland');
 const Path = require('path');
 const Hapi = require('hapi');
 const unirest = require('unirest');
-const shortid = require('shortid').generate;
 const test = require('./test.js');
 const factStream = require('./streams/factStream.js');
 const intentStream = require('./streams/intentStream.js');
@@ -77,7 +76,7 @@ primus.on('connection', function (spark) {
 
 function testConnection() {
 
-    test.register('bob', 'banana', function() {
+    test.register('bob', 'banana', function(response) {
         test.login('bob', 'banana', function(response) {
             const token = response.body;
 
@@ -99,44 +98,12 @@ function testConnection() {
 
 server.register(
     [
-        require('inert')
+        require('inert'),
+        require('./plugins/userPlugin.js')
     ], (err) => {
 
     server.start((err) => {
 
-        server.route({
-            method: 'POST',
-            path: '/register',
-            handler: function (request, reply) {
-                const payload = request.payload;
-                if (payload.username && payload.password && !credentials[payload.username]) {
-                    credentials[payload.username] = payload.password;
-                    return reply('user registered');
-                }
-                reply('user not registered');
-            }
-        });
-
-        server.route({
-            method: 'POST',
-            path: '/login',
-            handler: function (request, reply) {
-                const payload = request.payload;
-                if (credentials[payload.username] && credentials[payload.username] == payload.password) {
-
-                    sessionStore.remove({ username: payload.username }, { multi: true }, function (err, numRemoved) {
-                        const token = shortid();
-
-                        sessionStore.insert({ token: token, username: payload.username}, function(err, newDoc) {
-                            return reply(token);
-                        });
-                    });
-
-                } else {
-                    reply('');
-                }
-            }
-        });
 
         if (err) {
             throw err;
