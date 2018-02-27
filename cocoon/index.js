@@ -7,6 +7,10 @@ const unirest = require('unirest');
 const shortid = require('shortid').generate;
 const test = require('./test.js');
 
+const sessionStore = require('./store/session');
+
+console.log(sessionStore);
+
 const server = new Hapi.Server({
     connections: {
         routes: {
@@ -29,12 +33,14 @@ const sessions = {};
 const users = {};
 
 primus.authorize(function (req, done) {
-    const activeUser = sessions[req.query.token];
 
-    if (activeUser) {
-        return done();
-    }
-    done(new Error('invalid token'));
+    sessionStore.findOne({ token: req.query.token }, function(err, doc) {
+        if (doc) {
+            return done();
+        }
+        done(new Error('invalid token'));
+    });
+
 });
 
 const streams = {};
@@ -43,7 +49,7 @@ streams.factStream = _()
     .each(function(fact) {
         primus.forEach(function (spark, id, connections) {
             if (spark.username) {
-                spark.write(fact);
+                spark.write({ type: 'fact', payload: fact });
             }
         });
     });
@@ -58,21 +64,24 @@ streams.intentStream = _()
 streams.intentStream.resume();
 
 primus.on('connection', function (spark) {
-    const activeUser = sessions[spark.query.token];
+    sessionStore.findOne({ token: spark.query.token }, function(err, doc) {
+        if (doc) {
 
-    if (activeUser) {
-        spark.username = activeUser;
+            spark.username = doc.username;
 
-        if (!users[activeUser]) {
-            users[activeUser] = {
-                username: activeUser
-            };
+            if (!users[spark.username]) {
+                users[spark.username] = {
+                    username: spark.username
+                };
+            }
+
+            spark.on('data', function(message) {
+                streams.intentStream.write(spark.username + ': ' + message);
+            });
+
+            spark.write({type: 'authorized'});
         }
-
-        spark.on('data', function(message) {
-            streams.intentStream.write(spark.username + ': ' + message);
-        });
-    }
+    });
 });
 
 function testConnection() {
@@ -84,9 +93,13 @@ function testConnection() {
             const Socket = Primus.createSocket({});
 
             const client = new Socket('http://localhost:8080?token=' + token);
-            client.write('TesT');
+
             client.on('data', function(message) {
-                console.log('CLIENT GOT FACT', message);
+                if (message.type == 'authorized') {
+                    client.write('TesT');
+                } else {
+                    console.log('CLIENT GOT FACT', message);
+                }
             });
         });
     });
@@ -120,20 +133,18 @@ server.register(
                 const payload = request.payload;
                 console.log('UNK', request.payload);
                 if (credentials[payload.username] && credentials[payload.username] == payload.password) {
-                    credentials[payload.username] = payload.password;
 
-                    Object.keys(sessions).forEach(function(key) {
-                        if (sessions[key] == payload.username) {
-                            delete sessions[key];
-                        }
+                    sessionStore.remove({ username: payload.username }, { multi: true }, function (err, numRemoved) {
+                        const token = shortid();
+
+                        sessionStore.insert({ token: token, username: payload.username}, function(err, newDoc) {
+                            return reply(token);
+                        });
                     });
 
-                    const token = shortid();
-
-                    sessions[token] = payload.username;
-                    return reply(token);
+                } else {
+                    reply('');
                 }
-                reply('');
             }
         });
 
