@@ -23,7 +23,9 @@
     "nedb": "^1.8.0",
     "primus": "^7.1.1",
     "random-seed": "^0.3.0",
-    "unirest": "^0.5.1"
+    "shortid": "^2.2.8",
+    "unirest": "^0.5.1",
+    "ws": "^4.1.0"
   },
   "main": "index.js",
   "devDependencies": {}
