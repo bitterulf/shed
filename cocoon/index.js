@@ -44,7 +44,7 @@ primus.authorize(function (req, done) {
 const moddedFactStream = factStream(function(fact) {
     primus.forEach(function (spark, id, connections) {
         if (spark.username) {
-            spark.write({ type: 'fact', payload: fact });
+            spark.emit('factsChanged', fact);
         }
     });
 });
@@ -52,6 +52,8 @@ const moddedFactStream = factStream(function(fact) {
 const moddedIntentStream = intentStream(function(intent) {
     moddedFactStream.write(intent);
 });
+
+primus.plugin('emit', require('primus-emit'));
 
 primus.on('connection', function (spark) {
     sessionStore.findOne({ token: spark.query.token }, function(err, doc) {
@@ -65,11 +67,11 @@ primus.on('connection', function (spark) {
                 };
             }
 
-            spark.on('data', function(message) {
+            spark.on('intent', function(message) {
                 moddedIntentStream.write(spark.username + ': ' + message);
             });
 
-            spark.write({type: 'authorized'});
+            spark.emit('authorized');
         }
     });
 });
@@ -80,16 +82,19 @@ function testConnection() {
         test.login('bob', 'banana', function(response) {
             const token = response.body;
 
-            const Socket = Primus.createSocket({});
+            const Socket = Primus.createSocket({
+                  plugin: {
+                    'emit': require('primus-emit')
+                  }
+            });
 
             const client = new Socket('http://localhost:8080?token=' + token);
 
-            client.on('data', function(message) {
-                if (message.type == 'authorized') {
-                    client.write('TesT');
-                } else {
-                    console.log('CLIENT GOT FACT', message);
-                }
+            client.on('authorized', function(foo) {
+                client.emit('intent', 'Test');
+            });
+            client.on('factsChanged', function(message) {
+                console.log('CLIENT GOT FACT', message);
             });
         });
     });

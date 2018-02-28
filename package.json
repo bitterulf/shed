@@ -22,6 +22,7 @@
     "mingo": "^2.2.0",
     "nedb": "^1.8.0",
     "primus": "^7.1.1",
+    "primus-emit": "^1.0.0",
     "random-seed": "^0.3.0",
     "shortid": "^2.2.8",
     "unirest": "^0.5.1",
