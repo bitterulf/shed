@@ -7,6 +7,8 @@ const unirest = require('unirest');
 const test = require('./test.js');
 const factStream = require('./streams/factStream.js');
 const intentStream = require('./streams/intentStream.js');
+const graphql = require('graphql');
+const bluebird = require('bluebird');
 
 const sessionStore = require('./store/session');
 
@@ -41,11 +43,35 @@ primus.authorize(function (req, done) {
 
 });
 
-const moddedFactStream = factStream(function(fact) {
-    primus.forEach(function (spark, id, connections) {
-        if (spark.username) {
-            spark.emit('factsChanged', fact);
+const fetchAllMessages = bluebird.promisify(function(cb) {
+    cb(null, [{
+        username: 'bob',
+        text: 'fake'
+    }]);
+});
+
+let currentFacts;
+
+const schema = new graphql.GraphQLSchema({
+    query: new graphql.GraphQLObjectType({
+        name: 'RootQueryType',
+        fields: {
+            messages: require('./query/messages.js')(function(root, args) {
+                return currentFacts.messages || [];
+            })
         }
+    })
+});
+
+const moddedFactStream = factStream(function(fact) {
+    currentFacts = fact;
+
+    graphql.graphql(schema, '{ messages { text } }').then(result => {
+        primus.forEach(function (spark, id, connections) {
+            if (spark.username) {
+                spark.emit('dataChanged', result.data);
+            }
+        });
     });
 });
 
@@ -95,8 +121,8 @@ function testConnection() {
                 client.emit('intent', {type: 'message', payload: 'hello'});
                 client.emit('intent', {type: 'message', payload: 'hello2'});
             });
-            client.on('factsChanged', function(message) {
-                console.log('CLIENT GOT FACT', message);
+            client.on('dataChanged', function(message) {
+                console.log('CLIENT GOT DATA', message);
             });
         });
     });
