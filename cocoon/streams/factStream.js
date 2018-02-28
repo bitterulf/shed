@@ -1,9 +1,18 @@
 const _ = require('highland');
 
-const factStream = _();
-
-factStream.resume();
-
 module.exports = function(cb) {
-    return factStream.each(cb);
+
+    return _.pipeline(
+        _.scan({ messages: [] }, function(state, action) {
+            if (action.type == 'message') {
+                state.messages.push({
+                    username: action.username,
+                    text: action.payload
+                });
+            }
+
+            return state;
+        }),
+        _.each(cb)
+    );
 };

@@ -5,5 +5,10 @@ const intentStream = _();
 intentStream.resume();
 
 module.exports = function(cb) {
-    return intentStream.each(cb);
+    return _.pipeline(
+        _.filter(function(intent) {
+            return intent.type == 'message' && intent.username;
+        }),
+        _.each(cb)
+    );
 };

@@ -68,7 +68,8 @@ primus.on('connection', function (spark) {
             }
 
             spark.on('intent', function(message) {
-                moddedIntentStream.write(spark.username + ': ' + message);
+                message.username = spark.username;
+                moddedIntentStream.write(message);
             });
 
             spark.emit('authorized');
@@ -91,7 +92,8 @@ function testConnection() {
             const client = new Socket('http://localhost:8080?token=' + token);
 
             client.on('authorized', function(foo) {
-                client.emit('intent', 'Test');
+                client.emit('intent', {type: 'message', payload: 'hello'});
+                client.emit('intent', {type: 'message', payload: 'hello2'});
             });
             client.on('factsChanged', function(message) {
                 console.log('CLIENT GOT FACT', message);
