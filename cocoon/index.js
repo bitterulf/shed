@@ -74,12 +74,26 @@ const schema = new graphql.GraphQLSchema({
 const moddedFactStream = factStream(function(fact) {
     currentFacts = fact;
 
-    graphql.graphql(schema, '{ messages { text } }').then(result => {
-        primus.forEach(function (spark, id, connections) {
-            if (spark.username) {
-                spark.emit('dataChanged', result.data);
+    primus.forEach(function (spark, id, connections) {
+        if (spark.username) {
+            if (spark.subscriptions) {
+                spark.subscriptions.forEach(function(subscription) {
+                    graphql.graphql(schema, subscription.payload).then(result => {
+                        const md5Hash =  md5(result.data);
+                        if (subscription.md5Hash != md5Hash) {
+                            spark.emit('subscriptionResponse', {
+                                id: subscription.id,
+                                payload: result.data,
+                            });
+                            subscription.md5Hash = md5Hash;
+                        }
+                        else {
+                            console.log('subscription update dropped');
+                        }
+                    });
+                });
             }
-        });
+        }
     });
 });
 
@@ -122,6 +136,15 @@ primus.on('connection', function (spark) {
                 });
             });
 
+            spark.subscriptions = [];
+
+            spark.on('subscription', function(message) {
+                if (message.payload && message.id) {
+                    spark.subscriptions.push(message);
+                    console.log('subscription added');
+                }
+            });
+
             spark.emit('authorized');
         }
     });
@@ -143,6 +166,7 @@ function testConnection() {
 
             let md5Hash;
             client.on('authorized', function(foo) {
+                client.emit('subscription', {id: 'abc123', payload: '{ messages { text } }' });
                 client.emit('intent', {type: 'message', payload: 'hello'});
                 client.emit('intent', {type: 'message', payload: 'hello2'});
                 client.emit('query', {id: 'abc123', payload: '{ messages { text } }', md5Hash: md5Hash });
@@ -151,8 +175,8 @@ function testConnection() {
                 }, 1000);
             });
 
-            client.on('dataChanged', function(message) {
-                console.log('CLIENT GOT DATA', message);
+            client.on('subscriptionResponse', function(message) {
+                console.log('SUBSCRIPTION RESPONSE', message);
             });
 
             client.on('queryResponse', function(message) {
