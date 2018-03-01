@@ -15,6 +15,8 @@ const schema = require('./schema/schema.js');
 const md5 = require('./utils/md5.js');
 const factChange = require('./primus/factChange.js');
 
+const util = require('util')
+
 const server = new Hapi.Server({
     connections: {
         routes: {
@@ -58,6 +60,8 @@ function testConnection() {
             let md5Hash;
             client.on('authorized', function(foo) {
                 client.emit('subscription', {id: 'abc123', payload: '{ messages { text } }' });
+                client.emit('subscription', {id: 'abc123', payload: '{ users { id, username, ships { id, type, user { username } } } }' });
+                client.emit('subscription', {id: 'abc123', payload: '{ ships { id, type, owner, user { username } } }' });
                 client.emit('intent', {type: 'message', payload: 'hello'});
                 client.emit('intent', {type: 'message', payload: 'hello2'});
                 client.emit('query', {id: 'abc123', payload: '{ messages { text } }', md5Hash: md5Hash });
@@ -67,7 +71,7 @@ function testConnection() {
             });
 
             client.on('subscriptionResponse', function(message) {
-                console.log('SUBSCRIPTION RESPONSE', message);
+                console.log('SUBSCRIPTION RESPONSE', util.inspect(message.payload, false, null));
             });
 
             client.on('queryResponse', function(message) {
