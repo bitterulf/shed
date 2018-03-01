@@ -9,8 +9,16 @@ const factStream = require('./streams/factStream.js');
 const intentStream = require('./streams/intentStream.js');
 const graphql = require('graphql');
 const bluebird = require('bluebird');
+const crypto = require('crypto');
 
 const sessionStore = require('./store/session');
+
+function md5(value) {
+    return crypto
+        .createHash('md5')
+        .update(JSON.stringify(value))
+        .digest('hex');
+}
 
 const server = new Hapi.Server({
     connections: {
@@ -98,6 +106,22 @@ primus.on('connection', function (spark) {
                 moddedIntentStream.write(message);
             });
 
+            spark.on('query', function(message) {
+                graphql.graphql(schema, message.payload).then(result => {
+                    const md5Hash =  md5(result.data);
+                    if (!message.md5Hash || message.md5Hash != md5Hash) {
+                        spark.emit('queryResponse', {
+                            id: message.id,
+                            payload: result.data,
+                            md5Hash: md5Hash
+                        });
+                    }
+                    else {
+                        console.log('update dropped');
+                    }
+                });
+            });
+
             spark.emit('authorized');
         }
     });
@@ -117,12 +141,23 @@ function testConnection() {
 
             const client = new Socket('http://localhost:8080?token=' + token);
 
+            let md5Hash;
             client.on('authorized', function(foo) {
                 client.emit('intent', {type: 'message', payload: 'hello'});
                 client.emit('intent', {type: 'message', payload: 'hello2'});
+                client.emit('query', {id: 'abc123', payload: '{ messages { text } }', md5Hash: md5Hash });
+                setTimeout(function() {
+                    client.emit('query', {id: 'abc123', payload: '{ messages { text } }', md5Hash: md5Hash });
+                }, 1000);
             });
+
             client.on('dataChanged', function(message) {
                 console.log('CLIENT GOT DATA', message);
+            });
+
+            client.on('queryResponse', function(message) {
+                console.log('QUERY RESPONSE', message);
+                md5Hash = message.md5Hash;
             });
         });
     });
