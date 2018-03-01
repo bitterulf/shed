@@ -4,11 +4,10 @@ const intentStream = _();
 
 intentStream.resume();
 
-module.exports = function(cb) {
+module.exports = function() {
     return _.pipeline(
         _.filter(function(intent) {
             return intent.type == 'message' && intent.username;
-        }),
-        _.each(cb)
+        })
     );
 };
