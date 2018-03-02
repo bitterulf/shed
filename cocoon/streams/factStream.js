@@ -4,7 +4,7 @@ const shortid = require('shortid').generate;
 module.exports = function(cb) {
 
     return _.pipeline(
-        _.scan({ messages: [],  users: [], ships: [] }, function(state, action) {
+        _.scan({ messages: [],  users: [], ships: [], crew: [] }, function(state, action) {
             if (action.type == 'message') {
                 state.messages.push({
                     username: action.username,
@@ -17,7 +17,9 @@ module.exports = function(cb) {
                         username: action.username,
                         id: action.userId
                     });
-                    state.ships.push({id: shortid(), type: 'big', owner: action.userId});
+                    const shipId = shortid();
+                    state.ships.push({id: shipId, type: 'big', owner: action.userId});
+                    state.crew.push({id: shortid(), type: 'sailor', employer: action.userId, location: shipId});
                 }
             }
 

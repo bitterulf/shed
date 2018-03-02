@@ -30,7 +30,31 @@ const ShipType = new graphql.GraphQLObjectType({
     })
 });
 
+const CrewManType = new graphql.GraphQLObjectType({
+    name: 'CrewMan',
+    description: 'This represent a Crew Man',
+    fields: () => ({
+        id: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
+        employer: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
+        location: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
+        type: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
+        user: {type: UserType, resolve: function(root, args){
+            const user = globalState.get().users.find(function(user) {
+                return user.id == root.employer;
+            });
+            return user;
+        }},
+        ship: {type: ShipType, resolve: function(root, args){
+            const ship = globalState.get().ships.find(function(ship) {
+                return ship.id == root.location;
+            });
+            return ship;
+        }}
+    })
+});
+
 module.exports = {
     UserType: UserType,
-    ShipType: ShipType
+    ShipType: ShipType,
+    CrewManType: CrewManType
 };
