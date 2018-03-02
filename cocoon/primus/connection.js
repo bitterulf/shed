@@ -20,8 +20,10 @@ module.exports = function(primus, intentStream) {
     primus.on('connection', function (spark) {
         sessionStore.findOne({ token: spark.query.token }, function(err, doc) {
             if (doc) {
+                console.log('NICE', doc._id);
 
                 spark.username = doc.username;
+                spark.userId = doc._id;
 
                 if (!users[spark.username]) {
                     users[spark.username] = {
@@ -31,11 +33,12 @@ module.exports = function(primus, intentStream) {
 
                 spark.on('intent', function(message) {
                     message.username = spark.username;
+                    message.userId = spark.userId;
                     intentStream.write(message);
                 });
 
                 spark.on('query', function(message) {
-                    graphql.graphql(schema, message.payload, {username: spark.username}).then(result => {
+                    graphql.graphql(schema, message.payload, {username: spark.username, userId: spark.userId}).then(result => {
                         const md5Hash =  md5(result.data);
                         if (!message.md5Hash || message.md5Hash != md5Hash) {
                             spark.emit('queryResponse', {
