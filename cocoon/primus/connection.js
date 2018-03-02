@@ -25,11 +25,7 @@ module.exports = function(primus, intentStream) {
                 spark.username = doc.username;
                 spark.userId = doc._id;
 
-                if (!users[spark.username]) {
-                    users[spark.username] = {
-                        username: spark.username
-                    };
-                }
+                intentStream.write({type: 'connected', username: spark.username, userId: spark.userId});
 
                 spark.on('intent', function(message) {
                     message.username = spark.username;

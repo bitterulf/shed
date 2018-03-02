@@ -7,7 +7,13 @@ intentStream.resume();
 module.exports = function() {
     return _.pipeline(
         _.filter(function(intent) {
-            return intent.type == 'message' && intent.username;
+            if (intent.type == 'message') {
+                return intent.username && intent.userId;
+            }
+            else if (intent.type == 'connected') {
+                return intent.username && intent.userId;
+            }
+            return false;
         })
     );
 };
