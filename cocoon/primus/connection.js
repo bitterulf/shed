@@ -35,7 +35,7 @@ module.exports = function(primus, intentStream) {
                 });
 
                 spark.on('query', function(message) {
-                    graphql.graphql(schema, message.payload).then(result => {
+                    graphql.graphql(schema, message.payload, {username: spark.username}).then(result => {
                         const md5Hash =  md5(result.data);
                         if (!message.md5Hash || message.md5Hash != md5Hash) {
                             spark.emit('queryResponse', {

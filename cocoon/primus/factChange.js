@@ -10,7 +10,7 @@ module.exports = function(primus, fact) {
         if (spark.username) {
             if (spark.subscriptions) {
                 spark.subscriptions.forEach(function(subscription) {
-                    graphql.graphql(schema, subscription.payload).then(result => {
+                    graphql.graphql(schema, subscription.payload, {username: spark.username}).then(result => {
                         const md5Hash =  md5(result.data);
                         if (subscription.md5Hash != md5Hash) {
                             spark.emit('subscriptionResponse', {

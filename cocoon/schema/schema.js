@@ -6,7 +6,8 @@ module.exports = new graphql.GraphQLSchema({
         fields: {
             messages: require('../query/messages.js'),
             users: require('../query/users.js'),
-            ships: require('../query/ships.js')
+            ships: require('../query/ships.js'),
+            myScore: require('../query/myScore.js')
         }
     })
 });
