@@ -50,6 +50,7 @@ const ShipType = new graphql.GraphQLObjectType({
             }
             return 0;
         }},
+        sailCooldown: {type: new graphql.GraphQLNonNull(graphql.GraphQLInt)},
         user: {type: UserType, resolve: function(root, args){
             const user = globalState.get().users.find(function(user) {
                 return user.id == root.owner;
