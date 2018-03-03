@@ -18,7 +18,7 @@ module.exports = function(cb) {
                         id: action.userId
                     });
                     const shipId = shortid();
-                    state.ships.push({id: shipId, type: 'big', owner: action.userId, x: 0, y: 0, route: [] });
+                    state.ships.push({id: shipId, size: 'BIG', owner: action.userId, x: 0, y: 0, route: [] });
                     state.crew.push({id: shortid(), type: 'sailor', employer: action.userId, location: shipId});
                 }
             }

@@ -23,13 +23,25 @@ const PositionType = new graphql.GraphQLObjectType({
     })
 });
 
+const ShipSize = new graphql.GraphQLEnumType({
+  name: 'ShipSize',
+  values: {
+    'BIG': { value: 'BIG' }
+  }
+});
+
 const ShipType = new graphql.GraphQLObjectType({
     name: 'Ship',
     description: 'This represent a Ship',
     fields: () => ({
         id: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
         owner: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
-        type: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
+        size: {
+            type: ShipSize
+            // resolve: function(root, args) {
+                // return root.size;
+            // }
+        },
         user: {type: UserType, resolve: function(root, args){
             const user = globalState.get().users.find(function(user) {
                 return user.id == root.owner;

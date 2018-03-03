@@ -59,9 +59,7 @@ function testConnection() {
 
             let md5Hash;
             client.on('authorized', function(foo) {
-                client.emit('subscription', {id: 'abc123', payload: '{ messages { text } }' });
-                client.emit('subscription', {id: 'abc123', payload: '{ users { id, username, ships { type, user { username } } } }' });
-                client.emit('subscription', {id: 'abc123', payload: '{ ships { id, type, owner, x, y, route { x, y}, user { username } }, myScore { username, ships }, crew { id, user { username }, ship { id } } }' });
+                client.emit('subscription', {id: 'abc123', payload: '{ ships { id, size , owner, x, y, route { x, y}, user { username } }, myScore { username, ships }, crew { id, user { username }, ship { id } } }' });
                 client.emit('intent', {type: 'message', payload: 'hello'});
                 client.emit('intent', {type: 'message', payload: 'hello2'});
                 client.emit('query', {id: 'abc123', payload: '{ messages { text } }', md5Hash: md5Hash });
