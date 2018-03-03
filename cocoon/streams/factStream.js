@@ -28,7 +28,13 @@ module.exports = function(cb) {
                 });
 
                 if (ship) {
-                    ship.route.push({x: action.x, y: action.y});
+                    if (ship.route.length == 0) {
+                        ship.route.push({x: action.x, y: action.y});
+                        ship.sailCooldown = 100;
+                    }
+                    else {
+                        ship.route.push({x: action.x, y: action.y});
+                    }
                 }
             }
 
