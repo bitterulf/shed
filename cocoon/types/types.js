@@ -89,5 +89,6 @@ const CrewManType = new graphql.GraphQLObjectType({
 module.exports = {
     UserType: UserType,
     ShipType: ShipType,
-    CrewManType: CrewManType
+    CrewManType: CrewManType,
+    shipSizeData: shipSizeData
 };

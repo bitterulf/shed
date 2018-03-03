@@ -65,6 +65,8 @@ function testConnection() {
                 client.emit('query', {id: 'abc123', payload: '{ messages { text } }', md5Hash: md5Hash });
                 setTimeout(function() {
                     client.emit('query', {id: 'abc123', payload: '{ messages { text } }', md5Hash: md5Hash });
+                    client.emit('intent', {type: 'tick', payload: 10});
+                    client.emit('intent', {type: 'tick', payload: 10});
                 }, 1000);
             });
 

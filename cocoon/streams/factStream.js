@@ -1,5 +1,6 @@
 const _ = require('highland');
 const shortid = require('shortid').generate;
+const shipSizeData = require('../types/types.js').shipSizeData;
 
 module.exports = function(cb) {
 
@@ -36,6 +37,23 @@ module.exports = function(cb) {
                         ship.route.push({x: action.x, y: action.y});
                     }
                 }
+            }
+            else if (action.type == 'tick') {
+                state.ships.forEach(function(ship) {
+                    const shipSize = shipSizeData[ship.size];
+                    if (shipSize) {
+                        if (ship.route.length) {
+                            const tickTime = action.payload * shipSize.speed;
+                            ship.sailCooldown -= tickTime;
+                            if (ship.sailCooldown <= 0) {
+                                ship.sailCooldown = 0;
+                                const newPos = ship.route.shift();
+                                ship.x = newPos.x;
+                                ship.y = newPos.y;
+                            }
+                        }
+                    }
+                });
             }
 
             return state;

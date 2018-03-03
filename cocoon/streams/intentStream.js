@@ -16,6 +16,9 @@ module.exports = function() {
             else if (intent.type == 'navigate') {
                 return intent.username && intent.userId && intent.ship && intent.x && intent.y;
             }
+            else if (intent.type == 'tick') {
+                return intent.payload;
+            }
             return false;
         })
     );
