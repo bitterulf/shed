@@ -22,7 +22,7 @@ module.exports = {
         }
 
         const myShips = globalState.get().ships.filter(function(ship) {
-            return ship.owner == user.id;
+            return ship.owner == user.username;
         });
 
         return { username: root.username, ships: myShips.length };

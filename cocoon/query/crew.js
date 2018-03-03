@@ -8,7 +8,7 @@ module.exports = {
     resolve: function(root, args) {
 
         return globalState.get().crew.filter(function(crewMan) {
-            return crewMan.employer == root.userId;
+            return crewMan.employer == root.username;
         });
     }
 };

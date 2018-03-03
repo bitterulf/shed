@@ -9,7 +9,7 @@ const UserType = new graphql.GraphQLObjectType({
         username: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
         ships: {type: new graphql.GraphQLList(ShipType), resolve: function(root, args) {
             const ships = globalState.get().ships || [];
-            return ships.filter(function(ship) { return ship.owner == root.id; });
+            return ships.filter(function(ship) { return ship.owner == root.username; });
         } }
     })
 });
@@ -53,7 +53,7 @@ const ShipType = new graphql.GraphQLObjectType({
         sailCooldown: {type: new graphql.GraphQLNonNull(graphql.GraphQLInt)},
         user: {type: UserType, resolve: function(root, args){
             const user = globalState.get().users.find(function(user) {
-                return user.id == root.owner;
+                return user.username == root.owner;
             });
             return user;
         }},
@@ -73,7 +73,7 @@ const CrewManType = new graphql.GraphQLObjectType({
         type: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
         user: {type: UserType, resolve: function(root, args){
             const user = globalState.get().users.find(function(user) {
-                return user.id == root.employer;
+                return user.username == root.employer;
             });
             return user;
         }},

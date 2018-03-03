@@ -4,6 +4,21 @@
         <script src="//unpkg.com/mithril/mithril.js"></script>
         <script src="/primus/primus.js"></script>
         <script>
+            var state = {
+                crew: []
+            };
+
+            const App = {
+                view: function() {
+                    return m('div', [
+                        m('h1', 'crew'),
+                        m("div", state.crew.map(function(crewMan) {
+                            return m('div', crewMan.id);
+                        }))
+                    ]);
+                }
+            };
+
             m.request({
                 method: "POST",
                 url: "/login",
@@ -17,7 +32,9 @@
                     console.log('Authorized');
                     primus.emit('subscription', {id: 'abc123', payload: '{ ships { id, speed, sailCooldown, size , owner, x, y, route { x, y}, user { username } }, myScore { username, ships }, crew { id, user { username }, ship { id } } }' });
                     primus.on('subscriptionResponse', function(message) {
+                        state = message.payload
                         console.log('SUBSCRIPTION', message);
+                        m.redraw();
                     });
                     primus.emit('intent', {type: 'tick', payload: 1});
                 });
@@ -25,5 +42,8 @@
         </script>
     </head>
     <body>
+        <script>
+            m.mount(document.body, App)
+        </script>
     </body>
 </html>
