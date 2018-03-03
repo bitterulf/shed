@@ -23,18 +23,16 @@ module.exports = function(primus, intentStream) {
                 console.log('NICE', doc._id);
 
                 spark.username = doc.username;
-                spark.userId = doc._id;
 
-                intentStream.write({type: 'connected', username: spark.username, userId: spark.userId});
+                intentStream.write({type: 'connected', username: spark.username });
 
                 spark.on('intent', function(message) {
                     message.username = spark.username;
-                    message.userId = spark.userId;
                     intentStream.write(message);
                 });
 
                 spark.on('query', function(message) {
-                    graphql.graphql(schema, message.payload, {username: spark.username, userId: spark.userId}).then(result => {
+                    graphql.graphql(schema, message.payload, {username: spark.username }).then(result => {
                         const md5Hash =  md5(result.data);
                         if (!message.md5Hash || message.md5Hash != md5Hash) {
                             spark.emit('queryResponse', {

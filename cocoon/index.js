@@ -46,8 +46,11 @@ require('./primus/connection.js')(primus, moddedIntentStream);
 function testConnection() {
 
     test.register('bob', 'banana', function(response) {
+
+        return;
+
         test.login('bob', 'banana', function(response) {
-            const token = response.body;
+            const token = response.body.token;
 
             const Socket = Primus.createSocket({
                   plugin: {
@@ -94,6 +97,18 @@ server.register(
         require('inert'),
         require('./plugins/userPlugin.js')
     ], (err) => {
+
+    server.route({
+        method: 'GET',
+        path: '/{param*}',
+        handler: {
+            directory: {
+                path: './public',
+                redirectToSlash: true,
+                index: true
+            }
+        }
+    });
 
     server.start((err) => {
 

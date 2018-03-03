@@ -1,0 +1,29 @@
+<html>
+    <head>
+        <title>client</title>
+        <script src="//unpkg.com/mithril/mithril.js"></script>
+        <script src="/primus/primus.js"></script>
+        <script>
+            m.request({
+                method: "POST",
+                url: "/login",
+                data: {username: "bob", password: "banana"}
+            })
+            .then(function(result) {
+                const token = result.token;
+                console.log(Primus, token)
+                const primus = new Primus('?token=' + token, {});
+                primus.on('authorized', function() {
+                    console.log('Authorized');
+                    primus.emit('subscription', {id: 'abc123', payload: '{ ships { id, speed, sailCooldown, size , owner, x, y, route { x, y}, user { username } }, myScore { username, ships }, crew { id, user { username }, ship { id } } }' });
+                    primus.on('subscriptionResponse', function(message) {
+                        console.log('SUBSCRIPTION', message);
+                    });
+                    primus.emit('intent', {type: 'tick', payload: 1});
+                });
+            })
+        </script>
+    </head>
+    <body>
+    </body>
+</html>

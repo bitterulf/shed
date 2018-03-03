@@ -38,12 +38,12 @@ const userPlugin = {
                             const token = shortid();
 
                             sessionStore.insert({ token: token, username: payload.username}, function(err, newDoc) {
-                                return reply(token);
+                                return reply({ token: token });
                             });
                         });
                     }
                     else {
-                        reply('');
+                        reply({});
                     }
                 });
             }

@@ -13,19 +13,19 @@ module.exports = function(cb) {
                 });
             }
             else if (action.type == 'connected') {
-                if (!state.users.find(function(user) { return user.id  == action.userId })) {
+                console.log('connected with', action.username);
+                if (!state.users.find(function(user) { return user.username  == action.username })) {
                     state.users.push({
-                        username: action.username,
-                        id: action.userId
+                        username: action.username
                     });
                     const shipId = shortid();
-                    state.ships.push({id: shipId, size: 'BIG', sailCooldown: 0, owner: action.userId, x: 0, y: 0, route: [] });
-                    state.crew.push({id: shortid(), type: 'sailor', employer: action.userId, location: shipId});
+                    state.ships.push({id: shipId, size: 'BIG', sailCooldown: 0, owner: action.username, x: 0, y: 0, route: [] });
+                    state.crew.push({id: shortid(), type: 'sailor', employer: action.username, location: shipId});
                 }
             }
             else if (action.type == 'navigate') {
                 const ship  = state.ships.find(function(ship) {
-                    return ship.owner == action.userId && ship.id == action.ship;
+                    return ship.owner == action.username && ship.id == action.ship;
                 });
 
                 if (ship) {
