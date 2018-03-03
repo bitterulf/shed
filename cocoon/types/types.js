@@ -14,6 +14,15 @@ const UserType = new graphql.GraphQLObjectType({
     })
 });
 
+const PositionType = new graphql.GraphQLObjectType({
+    name: 'Position',
+    description: 'This represent a Position',
+    fields: () => ({
+        x: {type: new graphql.GraphQLNonNull(graphql.GraphQLInt)},
+        y: {type: new graphql.GraphQLNonNull(graphql.GraphQLInt)}
+    })
+});
+
 const ShipType = new graphql.GraphQLObjectType({
     name: 'Ship',
     description: 'This represent a Ship',
@@ -26,7 +35,10 @@ const ShipType = new graphql.GraphQLObjectType({
                 return user.id == root.owner;
             });
             return user;
-        }}
+        }},
+        x: {type: new graphql.GraphQLNonNull(graphql.GraphQLInt)},
+        y: {type: new graphql.GraphQLNonNull(graphql.GraphQLInt)},
+        route: {type: new graphql.GraphQLList(PositionType)}
     })
 });
 

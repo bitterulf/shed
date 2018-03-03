@@ -61,7 +61,7 @@ function testConnection() {
             client.on('authorized', function(foo) {
                 client.emit('subscription', {id: 'abc123', payload: '{ messages { text } }' });
                 client.emit('subscription', {id: 'abc123', payload: '{ users { id, username, ships { type, user { username } } } }' });
-                client.emit('subscription', {id: 'abc123', payload: '{ ships { type, owner, user { username } }, myScore { username, ships }, crew { id, user { username }, ship { id } } }' });
+                client.emit('subscription', {id: 'abc123', payload: '{ ships { id, type, owner, x, y, route { x, y}, user { username } }, myScore { username, ships }, crew { id, user { username }, ship { id } } }' });
                 client.emit('intent', {type: 'message', payload: 'hello'});
                 client.emit('intent', {type: 'message', payload: 'hello2'});
                 client.emit('query', {id: 'abc123', payload: '{ messages { text } }', md5Hash: md5Hash });
@@ -70,8 +70,14 @@ function testConnection() {
                 }, 1000);
             });
 
+            let shipNavigated = false;
+
             client.on('subscriptionResponse', function(message) {
                 console.log('SUBSCRIPTION RESPONSE', util.inspect(message.payload, false, null));
+                if (!shipNavigated && message.payload.ships) {
+                    client.emit('intent', {type: 'navigate', ship: message.payload.ships[0].id, x: 1, y: 2});
+                    shipNavigated = true;
+                }
             });
 
             client.on('queryResponse', function(message) {

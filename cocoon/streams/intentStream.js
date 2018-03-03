@@ -13,6 +13,9 @@ module.exports = function() {
             else if (intent.type == 'connected') {
                 return intent.username && intent.userId;
             }
+            else if (intent.type == 'navigate') {
+                return intent.username && intent.userId && intent.ship && intent.x && intent.y;
+            }
             return false;
         })
     );

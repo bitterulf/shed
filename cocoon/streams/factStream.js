@@ -18,8 +18,17 @@ module.exports = function(cb) {
                         id: action.userId
                     });
                     const shipId = shortid();
-                    state.ships.push({id: shipId, type: 'big', owner: action.userId});
+                    state.ships.push({id: shipId, type: 'big', owner: action.userId, x: 0, y: 0, route: [] });
                     state.crew.push({id: shortid(), type: 'sailor', employer: action.userId, location: shipId});
+                }
+            }
+            else if (action.type == 'navigate') {
+                const ship  = state.ships.find(function(ship) {
+                    return ship.owner == action.userId && ship.id == action.ship;
+                });
+
+                if (ship) {
+                    ship.route.push({x: action.x, y: action.y});
                 }
             }
 
