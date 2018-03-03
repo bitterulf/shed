@@ -8,13 +8,34 @@
                 crew: []
             };
 
-            const App = {
+            const CrewList = {
                 view: function() {
+                    const crewMen = state.crew.map(function(crewMan) {
+                        return m('tr', [
+                            m('td', { style: 'border: solid 1px red;' }, crewMan.id),
+                            m('td', { style: 'border: solid 1px red;' }, crewMan.ship.name),
+                            m('td', { style: 'border: solid 1px red;' }, crewMan.name)
+                        ]);
+                    });
+
+                    crewMen.unshift(m('tr', [
+                        m('th', { style: 'border: solid 1px blue;' }, 'id'),
+                        m('th', { style: 'border: solid 1px blue;' }, 'ship'),
+                        m('th', { style: 'border: solid 1px blue;' }, 'name')
+                    ]));
+
                     return m('div', [
                         m('h1', 'crew'),
-                        m("div", state.crew.map(function(crewMan) {
-                            return m('div', crewMan.id);
-                        }))
+                        m('table', { style: '' }, crewMen)
+                    ]);
+                }
+            };
+
+            const App = {
+                view: function() {
+
+                    return m('div', [
+                        m(CrewList)
                     ]);
                 }
             };
@@ -30,7 +51,7 @@
                 const primus = new Primus('?token=' + token, {});
                 primus.on('authorized', function() {
                     console.log('Authorized');
-                    primus.emit('subscription', {id: 'abc123', payload: '{ ships { id, speed, sailCooldown, size , owner, x, y, route { x, y}, user { username } }, myScore { username, ships }, crew { id, user { username }, ship { id } } }' });
+                    primus.emit('subscription', {id: 'abc123', payload: '{ ships { id, speed, sailCooldown, size , owner, x, y, route { x, y}, user { username } }, myScore { username, ships }, crew { id, name, ship { id, name } } }' });
                     primus.on('subscriptionResponse', function(message) {
                         state = message.payload
                         console.log('SUBSCRIPTION', message);

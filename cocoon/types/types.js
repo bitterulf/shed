@@ -40,6 +40,7 @@ const ShipType = new graphql.GraphQLObjectType({
     description: 'This represent a Ship',
     fields: () => ({
         id: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
+        name: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
         owner: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
         size: {
             type: ShipSize
@@ -68,6 +69,7 @@ const CrewManType = new graphql.GraphQLObjectType({
     description: 'This represent a Crew Man',
     fields: () => ({
         id: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
+        name: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
         employer: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
         location: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},
         type: {type: new graphql.GraphQLNonNull(graphql.GraphQLString)},

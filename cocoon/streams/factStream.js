@@ -19,8 +19,8 @@ module.exports = function(cb) {
                         username: action.username
                     });
                     const shipId = shortid();
-                    state.ships.push({id: shipId, size: 'BIG', sailCooldown: 0, owner: action.username, x: 0, y: 0, route: [] });
-                    state.crew.push({id: shortid(), type: 'sailor', employer: action.username, location: shipId});
+                    state.ships.push({id: shipId, name: 'Santa Maria', size: 'BIG', sailCooldown: 0, owner: action.username, x: 0, y: 0, route: [] });
+                    state.crew.push({id: shortid(), name: 'Heinrich', type: 'sailor', employer: action.username, location: shipId});
                 }
             }
             else if (action.type == 'navigate') {
