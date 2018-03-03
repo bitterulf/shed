@@ -28,6 +28,43 @@
                 }
             };
 
+            const Map = {
+                view: function() {
+                    const width = 8;
+                    const height = 8;
+
+                    const mapData = [];
+
+                    for (var y = 0; y < height; y++) {
+                        mapData[y] = [];
+                        for (var x = 0; x < width; x++) {
+                            mapData[y][x] = { color: 'grey', objects: [] };
+                        }
+                    }
+
+                    state.ships.forEach(function(ship) {
+                        ship.route.forEach(function(pos, index) {
+                            if (index == ship.route.length - 1) {
+                                mapData[pos.y][pos.x].color = 'blue';
+                            } else {
+                                mapData[pos.y][pos.x].color = 'cyan';
+                            }
+                        });
+                        mapData[ship.y][ship.x].objects.push('[SHIP: ' + ship.name + ']');
+                        mapData[ship.y][ship.x].color = 'brown';
+                    });
+
+                    return m('div', [
+                        m('h1', 'map'),
+                        m('table', { border: 1, style: '' }, mapData.map(function(row) {
+                            return m('tr', row.map(function(cellData) {
+                                return m('td', { style: 'width: 32px; height: 32px; background-color: ' + cellData.color, title: cellData.objects.join(', ') });
+                            }));
+                        }))
+                    ]);
+                }
+            };
+
             const CrewList = {
                 view: function() {
                     const crewMen = state.crew.map(function(crewMan) {
@@ -64,12 +101,6 @@
                         }
 
                         return m('tr', [
-                            m('td', { style: 'border: solid 1px red;' }, ship.id),
-                            m('td', { style: 'border: solid 1px red;' }, ship.name),
-                            m('td', { style: 'border: solid 1px red;' }, ship.x),
-                            m('td', { style: 'border: solid 1px red;' }, ship.y),
-                            m('td', { style: 'border: solid 1px red;' }, ship.sailCooldown),
-                            m('td', { style: 'border: solid 1px red;' }, ship.route.map(function(pos) { return m('span', { style: 'border: 1px solid green;' }, pos.x+'_'+pos.y)})),
                             m('td', { style: 'border: solid 1px red;' }, [
                                 m('button', { onclick: function() {
                                     primus.emit('intent', {type: 'navigate', ship: ship.id, x: lastPos.x - 1, y: lastPos.y});
@@ -83,18 +114,24 @@
                                 m('button', { onclick: function() {
                                     primus.emit('intent', {type: 'navigate', ship: ship.id, x: lastPos.x, y: lastPos.y + 1});
                                 } }, 's')
-                            ])
+                            ]),
+                            m('td', { style: 'border: solid 1px red;' }, ship.id),
+                            m('td', { style: 'border: solid 1px red;' }, ship.name),
+                            m('td', { style: 'border: solid 1px red;' }, ship.x),
+                            m('td', { style: 'border: solid 1px red;' }, ship.y),
+                            m('td', { style: 'border: solid 1px red;' }, ship.sailCooldown),
+                            m('td', { style: 'border: solid 1px red;' }, ship.route.map(function(pos) { return m('span', { style: 'border: 1px solid green;' }, pos.x+'_'+pos.y)}))
                         ]);
                     });
 
                     ships.unshift(m('tr', [
+                        m('th', { style: 'border: solid 1px blue;' }, 'actions'),
                         m('th', { style: 'border: solid 1px blue;' }, 'id'),
                         m('th', { style: 'border: solid 1px blue;' }, 'name'),
                         m('th', { style: 'border: solid 1px blue;' }, 'x'),
                         m('th', { style: 'border: solid 1px blue;' }, 'y'),
                         m('th', { style: 'border: solid 1px blue;' }, 'sailCooldown'),
-                        m('th', { style: 'border: solid 1px blue;' }, 'route'),
-                        m('th', { style: 'border: solid 1px blue;' }, 'actions')
+                        m('th', { style: 'border: solid 1px blue;' }, 'route')
                     ]));
 
                     return m('div', [
@@ -110,7 +147,8 @@
                     return m('div', [
                         m(Timer),
                         m(CrewList),
-                        m(ShipList)
+                        m(ShipList),
+                        m(Map)
                     ]);
                 }
             };
