@@ -4,8 +4,28 @@
         <script src="//unpkg.com/mithril/mithril.js"></script>
         <script src="/primus/primus.js"></script>
         <script>
+            var primus;
+
             var state = {
-                crew: []
+                crew: [],
+                ships: []
+            };
+
+            const Timer = {
+                view: function() {
+                    return m('div', [
+                        m('h1', 'timer'),
+                        m('button', { onclick: function() {
+                            primus.emit('intent', {type: 'tick', payload: 1});
+                        } }, 'tick 1'),
+                        m('button', { onclick: function() {
+                            primus.emit('intent', {type: 'tick', payload: 10});
+                        } }, 'tick 10'),
+                        m('button', { onclick: function() {
+                            primus.emit('intent', {type: 'tick', payload: 100});
+                        } }, 'tick 100')
+                    ]);
+                }
             };
 
             const CrewList = {
@@ -31,11 +51,66 @@
                 }
             };
 
+            const ShipList = {
+                view: function() {
+                    const ships = state.ships.map(function(ship) {
+                        let lastPos =  {
+                            x: ship.x,
+                            y: ship.y
+                        };
+
+                        if (ship.route.length) {
+                            lastPos = ship.route[ship.route.length - 1];
+                        }
+
+                        return m('tr', [
+                            m('td', { style: 'border: solid 1px red;' }, ship.id),
+                            m('td', { style: 'border: solid 1px red;' }, ship.name),
+                            m('td', { style: 'border: solid 1px red;' }, ship.x),
+                            m('td', { style: 'border: solid 1px red;' }, ship.y),
+                            m('td', { style: 'border: solid 1px red;' }, ship.sailCooldown),
+                            m('td', { style: 'border: solid 1px red;' }, ship.route.map(function(pos) { return m('span', { style: 'border: 1px solid green;' }, pos.x+'_'+pos.y)})),
+                            m('td', { style: 'border: solid 1px red;' }, [
+                                m('button', { onclick: function() {
+                                    primus.emit('intent', {type: 'navigate', ship: ship.id, x: lastPos.x - 1, y: lastPos.y});
+                                } }, 'w'),
+                                m('button', { onclick: function() {
+                                    primus.emit('intent', {type: 'navigate', ship: ship.id, x: lastPos.x + 1, y: lastPos.y});
+                                } }, 'e'),
+                                m('button', { onclick: function() {
+                                    primus.emit('intent', {type: 'navigate', ship: ship.id, x: lastPos.x, y: lastPos.y - 1});
+                                } }, 'n'),
+                                m('button', { onclick: function() {
+                                    primus.emit('intent', {type: 'navigate', ship: ship.id, x: lastPos.x, y: lastPos.y + 1});
+                                } }, 's')
+                            ])
+                        ]);
+                    });
+
+                    ships.unshift(m('tr', [
+                        m('th', { style: 'border: solid 1px blue;' }, 'id'),
+                        m('th', { style: 'border: solid 1px blue;' }, 'name'),
+                        m('th', { style: 'border: solid 1px blue;' }, 'x'),
+                        m('th', { style: 'border: solid 1px blue;' }, 'y'),
+                        m('th', { style: 'border: solid 1px blue;' }, 'sailCooldown'),
+                        m('th', { style: 'border: solid 1px blue;' }, 'route'),
+                        m('th', { style: 'border: solid 1px blue;' }, 'actions')
+                    ]));
+
+                    return m('div', [
+                        m('h1', 'ships'),
+                        m('table', { style: '' }, ships)
+                    ]);
+                }
+            };
+
             const App = {
                 view: function() {
 
                     return m('div', [
-                        m(CrewList)
+                        m(Timer),
+                        m(CrewList),
+                        m(ShipList)
                     ]);
                 }
             };
@@ -48,10 +123,10 @@
             .then(function(result) {
                 const token = result.token;
                 console.log(Primus, token)
-                const primus = new Primus('?token=' + token, {});
+                primus = new Primus('?token=' + token, {});
                 primus.on('authorized', function() {
                     console.log('Authorized');
-                    primus.emit('subscription', {id: 'abc123', payload: '{ ships { id, speed, sailCooldown, size , owner, x, y, route { x, y}, user { username } }, myScore { username, ships }, crew { id, name, ship { id, name } } }' });
+                    primus.emit('subscription', {id: 'abc123', payload: '{ ships { id, name, speed, sailCooldown, size , owner, x, y, route { x, y}, user { username } }, myScore { username, ships }, crew { id, name, ship { id, name } } }' });
                     primus.on('subscriptionResponse', function(message) {
                         state = message.payload
                         console.log('SUBSCRIPTION', message);

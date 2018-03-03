@@ -46,8 +46,12 @@ module.exports = function(cb) {
                             const tickTime = action.payload * shipSize.speed;
                             ship.sailCooldown -= tickTime;
                             if (ship.sailCooldown <= 0) {
-                                ship.sailCooldown = 0;
                                 const newPos = ship.route.shift();
+                                if (!ship.route.length) {
+                                    ship.sailCooldown = 0;
+                                } else {
+                                    ship.sailCooldown = 100;
+                                }
                                 ship.x = newPos.x;
                                 ship.y = newPos.y;
                             }
