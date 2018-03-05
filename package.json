@@ -29,5 +29,7 @@
     "ws": "^4.1.0"
   },
   "main": "index.js",
-  "devDependencies": {}
+  "devDependencies": {
+    "plop": "^1.9.1"
+  }
 }
