@@ -28,7 +28,8 @@
     "random-seed": "^0.3.0",
     "shortid": "^2.2.8",
     "unirest": "^0.5.1",
-    "ws": "^4.1.0"
+    "ws": "^4.1.0",
+    "x-ray": "^2.3.2"
   },
   "main": "index.js",
   "devDependencies": {
